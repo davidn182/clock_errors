@@ -27,7 +27,7 @@ $ conda activate clock_errors
 
 ### Getting started
 
-You can take a look at the jupyter-notebook at the **Tutorial** section for basic usage of the program.
+You can take a look at the jupyter-notebook at the **Tutorial** section for basic usage of the program. You will neet to have access to the data so send an e-mail to d.f.naranjohernandez@tudelft.nl
 
 ### References
 
