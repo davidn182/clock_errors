@@ -1,17 +1,17 @@
 # data_dir, station_1, station_2, dir_name, nsamples, lf, hf, cpl_dist, ref_vel, dist_trh, snr_trh, noise_st,apr_dt_st1, apr_dt_st2, dt_err, resp_details 
-/Users/localadmin/Dropbox/David/KAUST/Jupyter-notebooks/reykjanes/data/EIN_O19/1430827200_1430680422_0.92.SAC
-EIN
-O19
-1430827200
+/Users/davidnaranjohernandez/Dropbox/GitHub/data/ARN_O01_1418651674_082.sac 
+O15
+KEF
+1413547200
 180000
 0.15
 0.3
-35455.76335901606
+44814.22321062939
 2500
 2.0
-60
+10
 240
-0.6
+0.0
 0.0
 0.004
 False

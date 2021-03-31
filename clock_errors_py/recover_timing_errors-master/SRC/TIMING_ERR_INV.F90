@@ -68,7 +68,7 @@ logical wr_resp_details
 ! xcorr_path = '/Users/davidnaranjohernandez/Dropbox/David/KAUST/Jupyter-notebooks/reykjanes/data/KEF_O15/total_013672.SAC'
 ! nn : number of samples (180000).
 
-open(unit=10, file='/Users/davidnaranjohernandez/Dropbox/David/KAUST/recover_timing_errors-master/params.txt')
+open(unit=10, file='../params.txt')
 read(10, *)
 !params text file with:
 !lf : low frq, hf: high freq. : filter, cpl_dist : couple distance in meters, ref_vel : reference velocity, dist_trh : Minimum separation between stations in terms of wavelength, snr_trh : signal-to-noise ratio threshold, noise_st=240 : start of the noise window (in seconds) used for the computation of the SNR, apr_dt_st1 and apr_dt_st2: estimated timing error of both stations in seconds. apr_dt_st1 is the first station of the directory name, dt_err : 0.004

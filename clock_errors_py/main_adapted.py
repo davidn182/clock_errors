@@ -47,7 +47,7 @@ def read_xcorrelations(station1, station2, path2data_dir):
             continue
         if station2 not in file:
             continue
-        if '.mseed' not in file:
+        if '.sac' not in file:
             continue
         
         correlation_dir = os.path.join(path2data_dir, file)
@@ -56,7 +56,7 @@ def read_xcorrelations(station1, station2, path2data_dir):
         # The file header contains the day in the middle of the correlation
         # averaged over the available days
         average_date =  obspy.UTCDateTime(int(file.split('_')[2]))
-        number_days = float(file.split('_')[-1].replace('.mseed', ''))
+        number_days = float(file.split('_')[-1].replace('.sac', ''))
     
         correlation_tr.stats.average_date = average_date
         correlation_tr.stats.number_of_days = number_days
@@ -89,7 +89,7 @@ def read_correlation_file(path2file):
     # averaged over the available days
     splitted_file = file.split("_")
     average_date =  obspy.UTCDateTime(int(splitted_file[2]))
-    number_days = float(splitted_file[-1].replace('.mseed', ''))
+    number_days = float(splitted_file[-1].replace('.sac', ''))
     station1, station2 = str(splitted_file [0]), str(splitted_file [1])
     
     correlation_tr = obspy.read(path2file)[0]
@@ -161,6 +161,8 @@ def calculate_first_apriori_dt(clock_drift_object, correlations, plot=False,
       to retrieve all the correlations for a given station pair:
       correlations = Clock_drift.get_correlations_of_stationpair(station1.code,
                                                             station2.code)
+    if plot is set to tru provide a min_t and t_max to trim the correlation 
+    in the times you want to check
 
     Returns
     -------
@@ -229,6 +231,104 @@ def calculate_first_apriori_dt(clock_drift_object, correlations, plot=False,
         ax2.legend(loc='best')
         plt.show()
 
+# def calculate_result_shift(data_dir, station_1, station_2, dir_name,
+#                            nsamples, lf, hf, ref_vel, dist_trh, snr_trh,
+#                            noise_st, apr_dt_st1, apr_dt_st2, dt_err,
+#                            inv=inv,
+#                            resp_details=False):
+#     '''
+#     Function that runs with fortran code located in program_dir to calculate
+#     the difference between the time of the negative and positive virtual
+#     source arrival. 
+#     The results will be saved in a directory called 
+#     '{program_dir}/temp/{station1}_{station2}_{dir_name}/'
+
+#     Parameters
+#     ----------
+#     data_dir : TYPE
+#         location of the correlation pairs.
+#     station_1 : TYPE
+#         name of station 1.
+#     station_2 : TYPE
+#         name of station 2.
+#     dir_name : TYPE
+#         The name of the directory where the results will be saved. I suggest
+#         to write here the date 
+#     nsamples : TYPE
+#         Number of samples in the trace.
+#     lf : TYPE
+#         low freq. for bandapss filter.
+#     hf : TYPE
+#         high freq. for bandapss filter..
+#     cpl_dist : TYPE
+#         Distance between station pair.
+#     ref_vel : TYPE
+#         Reference velocity.
+#     dist_trh : TYPE
+#         Minimum station separation.
+#     snr_trh : TYPE
+#         Signal2noise ratio threshold.
+#     noise_st : TYPE
+#         Beginning of the noise window.
+#     apr_dt_st1 : TYPE
+#         Apriori estimate of arrival time of station 1.
+#     apr_dt_st2 : TYPE
+#         Apriori estimate of arrival time of station 2.
+#     dt_err : TYPE
+#         DESCRIPTION.
+
+#     Returns
+#     -------
+#     TYPE
+#         DESCRIPTION.
+
+#     '''
+#     program_dir = "./recover_timing_errors-master/params.txt"
+#     data_dir = correlation.correlation.file_path
+#     sta1 = inv.select(station=station_1)[0][0]
+#     lat1, lon1 = sta1.latitude, sta1.longitude
+#     sta2 = inv.select(station=station_2)[0][0]
+#     lat2, lon2 = sta2.latitude, sta2.longitude
+#     # Great circle distance in m using WGS84 ellipsoid.
+#     cpl_dist = gps2dist_azimuth(lat1, lon1, lat2, lon2)[0] 
+#     min_wl=ref_vel/hf
+#     if cpl_dist/min_wl < dist_trh:
+#         print("Station couple does not exceed minimum separation")
+#         return (np.nan, ['Station couple does not exceed minimum separation',
+#                          cpl_dist])
+    
+#     params_dir = os.path.join(program_dir, 'params.txt')
+
+#     with open(params_dir, 'w') as file:
+#         file.write("# data_dir, station_1, station_2, dir_name, nsamples, lf, hf, "
+#         "cpl_dist, ref_vel, dist_trh, snr_trh, noise_st,"
+#         "apr_dt_st1, apr_dt_st2, dt_err, resp_details \n")
+
+#         for val in [data_dir, station_1, station_2, dir_name, nsamples,
+#                     lf, hf, cpl_dist, ref_vel, dist_trh, snr_trh,
+#                     noise_st, apr_dt_st1, apr_dt_st2, dt_err, resp_details]:
+#             file.write(str(val) + '\n')
+#     os.chdir(program_dir)
+#     # Uncomment the following line if you made changes to the fortran
+#     # routines. I don't recommend changing the executable.
+#     # subprocess.run(["make"], capture_output=True)
+#     result = subprocess.run(["./BIN/Timing_err_inv"], capture_output=True)
+#     errors = str(result.stderr).replace("b'","").split('\\n')
+#     output = str(result.stdout).replace("b'","").split('\\n')
+#     for a in errors:
+#         print(a)
+#     for a in output:
+#         print(a)
+#         if 'Result shift:' in a:
+#             shift = a.split(':')[1]
+#         if 'Results saved in folder:' in a:
+#             folder_dir = a.split(':')[1]
+#     if ('shift' in locals())==False:
+#             shift = np.nan
+#             folder_dir = output
+#     return float(shift), [folder_dir, cpl_dist]
+
+# Definitions of the classes ###############################################
 class Station():
     '''
     
@@ -345,9 +445,9 @@ class Clock_drift():
         for file in sorted(os.listdir(path2data_dir)):
             # The file header contains the day in the middle of the correlation
             # averaged over the available days
-            if '.mseed' not in file:
+            if '.sac' not in file:
                 continue
-            attributes = file.replace('.mseed', '').split('_')
+            attributes = file.replace('.sac', '').split('_')
             station1 = attributes[0]
             station2 = attributes[1]
             average_date =  obspy.UTCDateTime(int(attributes[2]))
@@ -418,11 +518,22 @@ class Clock_drift():
         
         To calculate the apriori estimates we use the a and b value of both
         stations.
-
+        
+        First, we check if the first apriori estimate exists, otherwise it
+        gets calculated. 
+        Then, we retrieve all the cross-correlations present in the clock
+        drift object. 
+        After, if there are previously calculated a and b values for the
+        stations we calculate the t_N_lps (look at Naranjo et al.,
+        2021).
+        Otherwise, we use the first_apriori estimates.
+        If the station doesn't need correction, the apriori estimate will be 0.
+        
+        The apriori estimates will be save in a list so that we can check how
+        they evolve with each iteration.
+        
         Parameters
         ----------
-        stations : TYPE
-            DESCRIPTION.
 
         Returns
         -------
@@ -490,14 +601,64 @@ class Clock_drift():
                     continue
                 
                 calculate_first_apriori_dt(self, correlations)
+                
+    def plot_before_n_after_first_apriori_estimation(self, 
+                                                 station1_code,
+                                                 station2_code,
+                                                 min_t = -40,
+                                                 max_t = 30):
+        '''
+        Function to generate plot of the cross-correlations before and after 
+        applying the correction using the first apriori estimate function.
     
+        Parameters
+        ----------
+        station1_code : TYPE
+            DESCRIPTION.
+        station2_code : TYPE
+            DESCRIPTION.
+    
+        Returns
+        -------
+        None.
+    
+        '''
+        correlations = self.get_correlations_of_stationpair('KEF', 'O15')
+        f, (ax1, ax2) = plt.subplots(2, 1, sharey=True, figsize=(8,6))
+        f.suptitle('Before and after first apriori estimation')
+        for correlation in correlations:
+            tr = read_correlation_file(correlation.file_path)
+            try:
+                first_apriori_dt1 = float(correlation.first_apriori_dt1)
+                first_apriori_dt2 = float(correlation.first_apriori_dt2)
+                time_shift = first_apriori_dt1 + first_apriori_dt2
+            except:
+                msg = "You need to calculate the first apriori estimates "
+                msg += "before running this function."
+                raise Exception(msg)
+            t1, data = trim_correlation_trace(tr, min_t, max_t)
+            ax1.plot(t1, data, label=str(tr.stats.average_date)[:10])
+            ax2.plot(t1 + time_shift, data, label=str(tr.stats.average_date)[:10])
+        
+        ax1.set_title('Before correction ' + tr.stats.station_pair)
+        ax2.set_title('After correction '+ tr.stats.station_pair)
+        ax2.set_xlabel('Time [s]')
+        ax2.set_ylabel('Amplitudes')
+        ax1.set_ylabel('Amplitudes')
+        plt.tight_layout()
+        ax1.legend(loc=2)
+        ax2.legend(loc=2)
+        plt.show()
 #%%
 ext = '/Users/localadmin/Dropbox/GitHub/'
 # Parameters
 station_file = ext + "station_info"
 datadir = ext + "data"
 cd = Clock_drift(station_file, datadir, 0)
-
 cd.calculate_appriori_estimates()
 
-print(len(cd.get_correlations_of_stationpair('KEF', 'RAR')))
+
+station1_code = 'O01'
+station2_code = 'O20'
+cd.plot_before_n_after_first_apriori_estimation(station1_code, station2_code,
+                                                min_t = -40, max_t = 30)

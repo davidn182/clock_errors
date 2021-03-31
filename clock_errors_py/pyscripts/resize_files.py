@@ -21,12 +21,12 @@ for folder in os.listdir(data_path):
             continue
         corr_file_path = os.path.join(corrpair_path, corr_file)
         st = obspy.read(corr_file_path, debug_headers=True)
-        st.trim(st[0].stats.starttime + 60*minutes,
-                st[0].stats.endtime - 60*minutes)
+        # st.trim(st[0].stats.starttime + 60*minutes,
+        #         st[0].stats.endtime - 60*minutes)
         # if not os.path.exists(output_dir + folder):
         #     os.mkdir(output_dir + folder)
         splitted_name = corr_file.split('_')
         corr_file = splitted_name[1] +'_'+splitted_name[2]
         output_file = os.path.join(output_dir, folder +'_'+ corr_file)
         output_file = output_file.replace('.SAC','').replace('.','')
-        st.write(output_file + '.mseed', format='MSEED')
+        st.write(output_file + '.sac', format='SAC')
