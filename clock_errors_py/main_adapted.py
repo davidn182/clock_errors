@@ -7,14 +7,17 @@ Created on Wed Mar 24 15:58:16 2021
 """
 from contextlib import contextmanager
 import obspy
+from obspy.geodetics.base import gps2dist_azimuth
 from obspy.signal.cross_correlation import correlate, xcorr_max
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
+import subprocess
 import sys
 
 # Public functions.
-def read_xcorrelations(station1, station2, path2data_dir):
+def read_xcorrelations(station1_code, station2_code, path2data_dir):
     '''
     Function to load all the available cross-correlation for a given station
     pair. All the correlation files should be in the same directory and should 
@@ -23,9 +26,9 @@ def read_xcorrelations(station1, station2, path2data_dir):
 
     Parameters
     ----------
-    station1 : string
+    station1_code : string
         name of the station.
-    station2 : string
+    station2_code : string
         name of the station.
     directory : string
         path to data directory
@@ -36,7 +39,7 @@ def read_xcorrelations(station1, station2, path2data_dir):
     corr_dirs : list. directory paths of the files
 
     '''
-    if station1 == station2:
+    if station1_code == station2_code:
         print('No autocorrelations allowed')
         raise
     files = os.listdir(path2data_dir)
@@ -45,9 +48,9 @@ def read_xcorrelations(station1, station2, path2data_dir):
     correlation_stream = obspy.Stream()
     correlation_paths = []
     for file in files:
-        if station1 not in file:
+        if station1_code not in file:
             continue
-        if station2 not in file:
+        if station2_code not in file:
             continue
         if '.sac' not in file:
             continue
@@ -62,7 +65,7 @@ def read_xcorrelations(station1, station2, path2data_dir):
     
         correlation_tr.stats.average_date = average_date
         correlation_tr.stats.number_of_days = number_days
-        correlation_tr.stats.station_pair = station1 + '_' + station2
+        correlation_tr.stats.station_pair = station1_code + '_' + station2_code
         correlation_stream += correlation_tr
         correlation_paths.append(correlation_dir)
     return correlation_stream, correlation_paths
@@ -92,12 +95,12 @@ def read_correlation_file(path2file):
     splitted_file = file.split("_")
     average_date =  obspy.UTCDateTime(int(splitted_file[2]))
     number_days = float(splitted_file[-1].replace('.sac', ''))
-    station1, station2 = str(splitted_file [0]), str(splitted_file [1])
+    station1_code, station2_code = str(splitted_file [0]), str(splitted_file [1])
     
     correlation_tr = obspy.read(path2file)[0]
     correlation_tr.stats.average_date = average_date
     correlation_tr.stats.number_of_days = number_days
-    correlation_tr.stats.station_pair = station1 + '_' + station2
+    correlation_tr.stats.station_pair = station1_code + '_' + station2_code
     
     return correlation_tr
 
@@ -161,8 +164,8 @@ def calculate_first_apriori_dt(clock_drift_object, correlations, plot=False,
     correlations : list
       list of Correlations object. You can use the following function
       to retrieve all the correlations for a given station pair:
-      correlations = Clock_drift.get_correlations_of_stationpair(station1.code,
-                                                            station2.code)
+      correlations = Clock_drift.get_correlations_of_stationpair(station1_code,
+                                                            station2_code)
     if plot is set to tru provide a min_t and t_max to trim the correlation 
     in the times you want to check
 
@@ -175,8 +178,8 @@ def calculate_first_apriori_dt(clock_drift_object, correlations, plot=False,
         msg = "There should be at least two correlations to use this method"
         raise Exception(msg)
 
-    sta1 = list(set([correlation.station1 for correlation in correlations]))
-    sta2 = list(set([correlation.station1 for correlation in correlations]))
+    sta1 = list(set([correlation.station1_code for correlation in correlations]))
+    sta2 = list(set([correlation.station1_code for correlation in correlations]))
     if len(sta1)!= 1 or len(sta2) != 1:
         msg = "The first and second station in the correlations are not the "
         msg += "same for all the correlations."
@@ -204,10 +207,10 @@ def calculate_first_apriori_dt(clock_drift_object, correlations, plot=False,
     for correlation in correlations:
         t = correlation.average_date
         dt = (t - earliest_date) * shift_rate
-        if clock_drift_object.get_station(correlation.station1).needs_correction ==True:
+        if clock_drift_object.get_station(correlation.station1_code).needs_correction ==True:
             correlation.first_apriori_dt1 = dt
             correlation.first_apriori_dt2 = 0
-        elif clock_drift_object.get_station(correlation.station2).needs_correction ==True:
+        elif clock_drift_object.get_station(correlation.station2_code).needs_correction ==True:
             correlation.first_apriori_dt1 = 0
             correlation.first_apriori_dt2 = dt
         else:
@@ -251,102 +254,6 @@ def suppress_stdout():
             yield
         finally:
             sys.stdout = old_stdout
-# def calculate_result_shift(data_dir, station_1, station_2, dir_name,
-#                            nsamples, lf, hf, ref_vel, dist_trh, snr_trh,
-#                            noise_st, apr_dt_st1, apr_dt_st2, dt_err,
-#                            inv=inv,
-#                            resp_details=False):
-#     '''
-#     Function that runs with fortran code located in program_dir to calculate
-#     the difference between the time of the negative and positive virtual
-#     source arrival. 
-#     The results will be saved in a directory called 
-#     '{program_dir}/temp/{station1}_{station2}_{dir_name}/'
-
-#     Parameters
-#     ----------
-#     data_dir : TYPE
-#         location of the correlation pairs.
-#     station_1 : TYPE
-#         name of station 1.
-#     station_2 : TYPE
-#         name of station 2.
-#     dir_name : TYPE
-#         The name of the directory where the results will be saved. I suggest
-#         to write here the date 
-#     nsamples : TYPE
-#         Number of samples in the trace.
-#     lf : TYPE
-#         low freq. for bandapss filter.
-#     hf : TYPE
-#         high freq. for bandapss filter..
-#     cpl_dist : TYPE
-#         Distance between station pair.
-#     ref_vel : TYPE
-#         Reference velocity.
-#     dist_trh : TYPE
-#         Minimum station separation.
-#     snr_trh : TYPE
-#         Signal2noise ratio threshold.
-#     noise_st : TYPE
-#         Beginning of the noise window.
-#     apr_dt_st1 : TYPE
-#         Apriori estimate of arrival time of station 1.
-#     apr_dt_st2 : TYPE
-#         Apriori estimate of arrival time of station 2.
-#     dt_err : TYPE
-#         DESCRIPTION.
-
-#     Returns
-#     -------
-#     TYPE
-#         DESCRIPTION.
-
-#     '''
-#     program_dir = "./recover_timing_errors-master/params.txt"
-#     data_dir = correlation.correlation.file_path
-#     sta1 = inv.select(station=station_1)[0][0]
-#     lat1, lon1 = sta1.latitude, sta1.longitude
-#     sta2 = inv.select(station=station_2)[0][0]
-#     lat2, lon2 = sta2.latitude, sta2.longitude
-#     # Great circle distance in m using WGS84 ellipsoid.
-#     cpl_dist = gps2dist_azimuth(lat1, lon1, lat2, lon2)[0] 
-#     min_wl=ref_vel/hf
-#     if cpl_dist/min_wl < dist_trh:
-#         print("Station couple does not exceed minimum separation")
-#         return (np.nan, ['Station couple does not exceed minimum separation',
-#                          cpl_dist])
-    
-#     params_dir = os.path.join(program_dir, 'params.txt')
-
-#     with open(params_dir, 'w') as file:
-#         file.write("# data_dir, station_1, station_2, dir_name, nsamples, lf, hf, "
-#         "cpl_dist, ref_vel, dist_trh, snr_trh, noise_st,"
-#         "apr_dt_st1, apr_dt_st2, dt_err, resp_details \n")
-
-#         for val in [data_dir, station_1, station_2, dir_name, nsamples,
-#                     lf, hf, cpl_dist, ref_vel, dist_trh, snr_trh,
-#                     noise_st, apr_dt_st1, apr_dt_st2, dt_err, resp_details]:
-#             file.write(str(val) + '\n')
-#     os.chdir(program_dir)
-#     # Uncomment the following line if you made changes to the fortran
-#     # routines. I don't recommend changing the executable.
-#     # subprocess.run(["make"], capture_output=True)
-#     result = subprocess.run(["./BIN/Timing_err_inv"], capture_output=True)
-#     errors = str(result.stderr).replace("b'","").split('\\n')
-#     output = str(result.stdout).replace("b'","").split('\\n')
-#     for a in errors:
-#         print(a)
-#     for a in output:
-#         print(a)
-#         if 'Result shift:' in a:
-#             shift = a.split(':')[1]
-#         if 'Results saved in folder:' in a:
-#             folder_dir = a.split(':')[1]
-#     if ('shift' in locals())==False:
-#             shift = np.nan
-#             folder_dir = output
-#     return float(shift), [folder_dir, cpl_dist]
 
 # Definitions of the classes ###############################################
 class Station():
@@ -413,42 +320,148 @@ class Station():
         return info_string
 
 class Correlation():
-    def __init__(self, station1, station2, average_date, number_days, 
-                 file_path):
-        self.station1 = str(station1)
-        self.station2 = str(station2)
+    '''
+    '''
+    
+    def __init__(self, station1_code, station2_code, average_date, number_days,
+                 file_path, npts, sampling_rate, length_of_file_s, delta, 
+                 cpl_dist):
+        self.station1_code = str(station1_code)
+        self.station2_code = str(station2_code)
         self.average_date = obspy.UTCDateTime(average_date)
         self.number_days = float(number_days)
         if os.path.exists(file_path) == False:
             msg = "Directory with the correlation file couldn't be found: "
             raise Exception(msg)
         self.file_path = file_path
+        self.npts = int(npts)
+        self.sampling_rate = float(sampling_rate)
+        self.length_of_file_s = float(length_of_file_s)
+        self.delta = float(delta)
+        self.cpl_dist = cpl_dist
+        
         self.t_app = "Not calculated yet."
         self.first_apriori_dt1 = "Not calculated yet."
         self.first_apriori_dt2 = "Not calculated yet."
         self.apriori_station1 = "Not calculated yet."
         self.apriori_station2 = "Not calculated yet."
+        
     def __repr__(self):
         info_string = ("\n Correlation object" +
-                       "\n Station 1: " + self.station1 + 
-                       "\n Station 2: " + self.station2 + 
+                       "\n Station 1: " + self.station1_code + 
+                       "\n Station 2: " + self.station2_code + 
                        "\n Average date of CC: " + str(self.average_date) +
                        "\n Number of days: " + str(self.number_days) +
                        "\n Path: " + self.file_path + 
                        "\n first_apriori_dt1: " + str(self.first_apriori_dt1) +
                        "\n first_apriori_dt2: " + str(self.first_apriori_dt2) +
-                       "\n aprioris_dt1: " + str(self.apriori_station1) +
-                       "\n aprioris_dt2: " + str(self.apriori_station2) +
+                       "\n apriori_station1: " + str(self.apriori_station1) +
+                       "\n apriori_station2: " + str(self.apriori_station2) +
                        "\n t_app: " + str(self.t_app) + "\n")
         return info_string
+    
+    def calculate_t_app(self, lf, hf, ref_vel, dist_trh, snr_trh,
+                               noise_st, dt_err, resp_details=False):
+        '''
         
+    
+        Parameters
+        ----------
+        lf : TYPE
+            DESCRIPTION.
+        hf : TYPE
+            DESCRIPTION.
+        ref_vel : TYPE
+            DESCRIPTION.
+        dist_trh : TYPE
+            DESCRIPTION.
+        snr_trh : TYPE
+            DESCRIPTION.
+        noise_st : TYPE
+            DESCRIPTION.
+        dt_err : TYPE
+            DESCRIPTION.
+        resp_details : TYPE, optional
+            DESCRIPTION. The default is False.
+    
+        '''
+        
+        # Set variables for locating the fortran codes and the parameter file.
+        current_path = os.path.abspath(__file__)
+        clock_errors_py_dir =(Path(current_path).parents[0])
+        program_dir = os.path.join(clock_errors_py_dir,
+                                   'recover_timing_errors-master')
+        params_dir = os.path.join(program_dir, 'params.txt')
+        xcorr_path = self.file_path
+        
+        results_dir_name = os.path.basename(self.file_path)
+        results_dir_name.replace('.sac','')
+        results_dir_name.replace(self.station1_code+'-'+self.station2_code,'')
+        
+        # Station separation. Great circle distance in m using WGS84 ellipsoid.
+        cpl_dist = self.cpl_dist
+        min_wl=ref_vel/hf # Minimum wavelength separation.
+        
+        if cpl_dist/min_wl < dist_trh:
+            self.resp_details = 'Station couple does not exceed minimum separation'
+            if type(self.t_app) is not list:
+                self.t_app = [np.nan]
+            else:
+                self.t_app.append(np.nan)
+            return(np.nan, ['Station couple does not exceed minimum separation',
+                              cpl_dist])
+        try:
+            # Apriori estimates of both stations.
+            apr_dt_st1 = float(self.apriori_station1[-1])
+            apr_dt_st2 = float(self.apriori_station2[-1])
+        except:
+            msg = "No apriori estimate found for station 1 and station 2."
+            raise Exception(msg)
+        
+        with open(params_dir, 'w') as file:
+            file.write("# data_dir, station_1, station_2, results_dir_name, "
+                       "nsamples, lf, hf, cpl_dist, ref_vel, dist_trh, snr_trh, "
+                       "noise_st, apr_dt_st1, apr_dt_st2, dt_err, resp_details \n")
+        
+            for val in [xcorr_path, self.station1_code, self.station2_code,
+                        results_dir_name, self.npts, lf, hf, cpl_dist, 
+                        ref_vel, dist_trh, snr_trh, noise_st, apr_dt_st1,
+                        apr_dt_st2, dt_err, resp_details]:
+                file.write(str(val) + '\n')
+        os.chdir(program_dir)
+        # Uncomment the following line if you made changes to the fortran
+        # routines. I don't recommend changing the executable.
+        # subprocess.run(["make"], capture_output=True)
+        
+        result = subprocess.run(["./BIN/Timing_err_inv"], capture_output=True)
+        errors = str(result.stderr).replace("b'","").split('\\n')
+        output = str(result.stdout).replace("b'","").split('\\n')
+        for a in errors:
+            print(a)
+        for a in output:
+            print(a)
+            if 'Result shift:' in a:
+                shift = float(a.split(':')[1])
+            if 'Results saved in folder:' in a:
+                folder_dir = a.split(':')[1]
+        if ('shift' in locals())==False:
+                shift = np.nan
+                folder_dir = output
+        if resp_details:
+            self.resp_details = folder_dir
+        if type(self.t_app) is not list:
+            self.t_app = [shift]
+        else:
+            self.t_app.append(shift)
+        self.station_separation = cpl_dist
+
 class Clock_drift():
     '''
     
     '''
     def __init__(self, station_file, path2data_dir, reference_time):
         self.set_stations(station_file)
-        self.set_correlations(datadir)
+        self.set_correlations(path2data_dir)
         self.reference_time = obspy.UTCDateTime(reference_time)
     def __repr__(self):
         info_string = "Clock_drift object\n"
@@ -457,9 +470,9 @@ class Clock_drift():
         return info_string
         
     def set_correlations(self, path2data_dir):
-        if os.path.exists(datadir) == False:
+        if os.path.exists(path2data_dir) == False:
             msg = "Directory with the correlation files couldn't be found: "
-            msg += datadir
+            msg += path2data_dir
             raise Exception(msg)
         correlations = []
         for file in sorted(os.listdir(path2data_dir)):
@@ -468,13 +481,43 @@ class Clock_drift():
             if '.sac' not in file:
                 continue
             attributes = file.replace('.sac', '').split('_')
-            station1 = attributes[0]
-            station2 = attributes[1]
-            average_date =  obspy.UTCDateTime(int(attributes[2]))
-            number_days = float(attributes[-1])
+            station1_code = attributes[0]
+            station2_code = attributes[1]
+            try:
+                station1 = self.get_station(station1_code)
+                station2 = self.get_station(station2_code)
+            except:
+                msg = "Couldn´t find the stations of the file: " 
+                msg += str(path2data_dir)
+                msg += " in the inventory of the stations provided."
+                print(msg)
+                continue
+            
             file_path = os.path.join(path2data_dir, file)
-            correlation = Correlation(station1, station2, average_date,
-                                      number_days, file_path)
+            try:
+                tr = read_correlation_file(file_path)
+            except:
+                msg = "Couldn´t open the file: " 
+                msg += str(file_path)
+                msg += "\n Remember that it needs to have the format:"
+                msg += "station1code_station2code_averageDate_noCorrelatedDays"
+                msg += ".sac"
+                print(msg)
+                continue
+            # print(type(tr.stats.average_date))
+            # Station separation. Great circle distance in m using WGS84 ellipsoid.
+            cpl_dist = gps2dist_azimuth(station1.latitude, station1.longitude,
+                                        station2.latitude, station2.longitude)[0]
+            average_date =  tr.stats.average_date
+            number_days = tr.stats.number_of_days
+            npts = tr.stats.npts
+            delta = tr.stats.sac.delta
+            sampling_rate = tr.stats.sampling_rate
+            length_of_file_s = tr.stats.endtime-tr.stats.starttime
+            correlation = Correlation(station1_code, station2_code, 
+                                      average_date, number_days, file_path,
+                                      npts, sampling_rate, length_of_file_s,
+                                      delta, cpl_dist)
             correlations.append(correlation)
         self.correlations = correlations
         self.path2data_dir = path2data_dir
@@ -521,15 +564,15 @@ class Clock_drift():
             msg = "You have to choose two different stations."
             raise Exception(msg)
         for correlation in self.correlations:
-            if (station1_code != correlation.station1 and 
-                station1_code != correlation.station2):
+            if (station1_code != correlation.station1_code and 
+                station1_code != correlation.station2_code):
                 continue
-            if (station2_code != correlation.station1 and
-                station2_code != correlation.station2):
+            if (station2_code != correlation.station1_code and
+                station2_code != correlation.station2_code):
                 continue
             get_correlations.append(correlation)
         return get_correlations
-        
+
     def calculate_appriori_estimates(self):
         '''
         Calculate the apriori estimates for each of the correlation files.
@@ -565,8 +608,8 @@ class Clock_drift():
         except:
             self.calculate_first_aprioridt_4_allcorrelations()
         for correlation in self.correlations:
-            station1 = self.get_station(correlation.station1)
-            station2 = self.get_station(correlation.station2)
+            station1 = self.get_station(correlation.station1_code)
+            station2 = self.get_station(correlation.station2_code)
             average_date = obspy.UTCDateTime(correlation.average_date)
             t_N_lps = (average_date - self.reference_time)/86400.0
             if station1.needs_correction:
@@ -665,9 +708,9 @@ class Clock_drift():
         ax2.set_xlabel('Time [s]')
         ax2.set_ylabel('Amplitudes')
         ax1.set_ylabel('Amplitudes')
-        plt.tight_layout()
         ax1.legend(loc=2)
         ax2.legend(loc=2)
+        plt.tight_layout()
         plt.show()
 #%%
 ext = '/Users/localadmin/Dropbox/GitHub/'
@@ -677,8 +720,18 @@ datadir = ext + "data"
 cd = Clock_drift(station_file, datadir, 0)
 cd.calculate_appriori_estimates()
 
-
+#%%
 station1_code = 'O01'
 station2_code = 'O20'
 cd.plot_before_n_after_first_apriori_estimation(station1_code, station2_code,
                                                 min_t = -40, max_t = 30)
+#%%
+lf = 0.15 # Low freq. for the bandpass filter
+hf = 0.3 # High freq. for the bandpass filter 
+ref_vel = 2500 # m/s
+dist_trh = 2.0 # Minimum station separation in terms of wavelength
+snr_trh = 10 # Signal-to-noise ratio threshold
+noise_st = 240 # start of the noise window.
+dt_err = 0.004 # Sampling interval needs to be multiple of this value.
+resp_details = False
+a = cd.correlations[20].calculate_t_app(lf, hf, ref_vel, dist_trh, snr_trh, noise_st, dt_err)

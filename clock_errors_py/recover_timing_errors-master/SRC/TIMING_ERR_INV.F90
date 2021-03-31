@@ -68,7 +68,7 @@ logical wr_resp_details
 ! xcorr_path = '/Users/davidnaranjohernandez/Dropbox/David/KAUST/Jupyter-notebooks/reykjanes/data/KEF_O15/total_013672.SAC'
 ! nn : number of samples (180000).
 
-open(unit=10, file='../params.txt')
+open(unit=10, file='params.txt')
 read(10, *)
 !params text file with:
 !lf : low frq, hf: high freq. : filter, cpl_dist : couple distance in meters, ref_vel : reference velocity, dist_trh : Minimum separation between stations in terms of wavelength, snr_trh : signal-to-noise ratio threshold, noise_st=240 : start of the noise window (in seconds) used for the computation of the SNR, apr_dt_st1 and apr_dt_st2: estimated timing error of both stations in seconds. apr_dt_st1 is the first station of the directory name, dt_err : 0.004
@@ -103,7 +103,7 @@ if(nerr .gt. 0) then    ! negative only a warning (e.g. nerr=-803 means number o
   stop
 endif
  
-dir_8='/Users/davidnaranjohernandez/Dropbox/David/KAUST/recover_timing_errors-master/temp/'
+dir_8='temp/'
 cmd='mkdir '//trim(adjustl(dir_8))
 call system(cmd)
 
@@ -426,9 +426,11 @@ deallocate(left_taper,right_taper,xcorr,xcorr_filt)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 write(0,'(A)') '###############     PROGRAM COMPLETE      ################'
 write(6,*)'Results saved in folder:', trim(dir_8)//trim(station1)//'_'//trim(station2)//'_'//trim(dir_name)//'/'
-write(6,*)'acausal envelope: ',ac2_env
-write(6,*)'causal envelope: ',c2_env
-write(6,*)'s2n threshold: ',snr_trh_char
-write(6,*)'wavelength_threshold: ',wl_trh_char
 write(6,*)'Result shift: ',result_shift
+write(6,*)'acausal signal from index: ',ac1
+write(6,*)'acausal signal until index: ',ac2
+write(6,*)'causal signal from index: ',c1
+write(6,*)'causal signal until index: ',c2
+write(6,*)'SNR causal wave',c_snr
+write(6,*)'SNR acausal wave',ac_snr
 end program TIMING_ERR_INV
