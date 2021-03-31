@@ -5,11 +5,13 @@ Created on Wed Mar 24 15:58:16 2021
 
 @author: davidnaranjo
 """
+from contextlib import contextmanager
 import obspy
 from obspy.signal.cross_correlation import correlate, xcorr_max
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
 # Public functions.
 def read_xcorrelations(station1, station2, path2data_dir):
@@ -231,6 +233,24 @@ def calculate_first_apriori_dt(clock_drift_object, correlations, plot=False,
         ax2.legend(loc='best')
         plt.show()
 
+@contextmanager
+def suppress_stdout():
+    '''
+    Function to hide the ouput in the terminal to make some of the processes 
+    faster without the need of seing the terminal's output.
+
+    Returns
+    -------
+    None.
+
+    '''
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:  
+            yield
+        finally:
+            sys.stdout = old_stdout
 # def calculate_result_shift(data_dir, station_1, station_2, dir_name,
 #                            nsamples, lf, hf, ref_vel, dist_trh, snr_trh,
 #                            noise_st, apr_dt_st1, apr_dt_st2, dt_err,
