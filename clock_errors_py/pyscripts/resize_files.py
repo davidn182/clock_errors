@@ -8,9 +8,9 @@ Created on Wed Mar 24 10:52:13 2021
 import obspy
 import os
 
-data_path='/Users/localadmin/Dropbox/David/PhDTUDelft/data/'
+data_path='/Users/localadmin/Dropbox/David/KAUST/Jupyter-notebooks/reykjanes/data/'
 output_dir = '/Users/localadmin/Dropbox/GitHub/data/'
-minutes = 45
+minutes = 30 # Number of minutes to remove from begining and from end.
 for folder in os.listdir(data_path):
     if '.DS_Store' in folder:
         continue
@@ -21,8 +21,8 @@ for folder in os.listdir(data_path):
             continue
         corr_file_path = os.path.join(corrpair_path, corr_file)
         st = obspy.read(corr_file_path, debug_headers=True)
-        # st.trim(st[0].stats.starttime + 60*minutes,
-        #         st[0].stats.endtime - 60*minutes)
+        st.trim(st[0].stats.starttime + 60*minutes,
+                st[0].stats.endtime - 60*minutes)
         # if not os.path.exists(output_dir + folder):
         #     os.mkdir(output_dir + folder)
         splitted_name = corr_file.split('_')
