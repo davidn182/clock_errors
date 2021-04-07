@@ -80,3 +80,8 @@ pickle.dump(cd, file_pi)
 
 with open(dump_file, 'rb') as f:
         cd2 = pickle.load(f)
+        
+"/Users/localadmin/Dropbox/GitHub/clock_errors/clock_errors_py/jupyter-tutorials/data_test/",
+"/Users/localadmin/Dropbox/GitHub/clock_errors/clock_errors_py/jupyter-tutorials/station_info"
+# Parameters for locating the files where the correlation files and station 
+# information is contained.

@@ -1,17 +1,17 @@
 # data_dir, station_1, station_2, results_dir_name, nsamples, freqmin, freqmax, cpl_dist, ref_vel, dist_trh, snr_trh, noise_st, apr_dt_st1, apr_dt_st2, dt_err, resp_details 
-/Users/localadmin/Dropbox/GitHub/data/O23_SUH_1430751119_097.sac
-O23
-SUH
-O23_SUH_1430751119_097.sac
+/Users/localadmin/Dropbox/GitHub/clock_errors/clock_errors_py/jupyter-tutorials/data_test/O01_O03_1426509119_100.sac
+O01
+O03
+O01_O03_1426509119_100.sac
 90000
 0.15
 0.3
-45499.04944717951
+22889.447151534892
 2500.0
 2.0
 10
 240
--0.18974626689598623
-0.0
+1.5519699871378798
+2.6309251275800607
 0.004
 False
