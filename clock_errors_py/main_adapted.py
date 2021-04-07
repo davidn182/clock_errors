@@ -503,6 +503,7 @@ class Correlation():
         else:
             self.t_app.append(shift)
         self.station_separation = cpl_dist
+        # TODO: Calculate signal to noise raito.
 
 class Clock_drift():
     '''

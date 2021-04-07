@@ -8,3 +8,5 @@ __pycache__/main_adapted.cpython-37.pyc
 __pycache__/main_adapted.cpython-37.pyc
 *.pyc
 .DS_Store
+clock_errors_py/__pycache__/main_adapted.cpython-37.pyc
+*.pyc

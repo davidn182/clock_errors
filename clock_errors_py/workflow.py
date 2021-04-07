@@ -7,8 +7,6 @@ Created on Sun Apr  4 21:03:52 2021
 """
 
 from main_adapted import Processing_parameters, Clock_drift
-import numpy as np
-import pandas as pd
 import time
 ext = '/Users/localadmin/Dropbox/GitHub/'
 # Parameters
@@ -72,3 +70,13 @@ for i in range(10):
     cd.build_matrices()
     cd.solve_eq()
     print("---One iteration takes --- %s seconds ---" % (time.time() - start_time))
+#%%
+# ########## TO save yur progress ########################################
+import pickle
+dump_dir = ext + "clock_errors/clock_errors_py/dump/"
+dump_file = dump_dir + 'clock_drift.obj'
+file_pi = open(dump_file, 'wb') 
+pickle.dump(cd, file_pi)
+
+with open(dump_file, 'rb') as f:
+        cd2 = pickle.load(f)
