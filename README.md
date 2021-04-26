@@ -1,6 +1,6 @@
 <img alt="OBS clock errors: A Python Toolbox for correcting clock errors of OBSs." class="right" style="width: 40%" src="https://github.com/davidn182/clock_errors/blob/main/clock_errors_py/Figures/timing_logo1024_1.png"/>
 
-# OBS_clock_errors
+# py_ClockErorrs
 
 py_clock_errors is an open-source project made to correct clock errors of seismological stations.
 
