@@ -1,4 +1,4 @@
-<img alt="OBS clock errors: A Python Toolbox for correcting clock errors of OBSs." class="right" style="width: 40%" src="https://github.com/davidn182/clock_errors/tree/main/clock_errors_py/Figures/timing_logo.pdf" />
+<img alt="OBS clock errors: A Python Toolbox for correcting clock errors of OBSs." class="right" style="width: 40%" src="https://github.com/davidn182/clock_errors/tree/main/clock_errors_py/Figures/timing_logo.png" />
 
 # OBS_clock_errors
 
