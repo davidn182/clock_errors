@@ -2,7 +2,7 @@
 
 # OBS_clock_errors
 
-OBS_clock_errors is an open-source project made to correct clock errors of seismological stations.
+py_clock_errors is an open-source project made to correct clock errors of seismological stations.
 
 # Abstract
 
