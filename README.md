@@ -34,7 +34,7 @@ You can take a look at the jupyter-notebook at the **Tutorial** section for basi
 ### Acknowledgements
 The data used in this project was provided by the IMAGE project (Integrated Methods for Advanced Geothermal Exploration) and can be retrieved from http://www.image-fp7.fr/Pages/default.aspx.
 Thanks to the valuable contributions of Laura Parisi, Kees Weemstra, Philippe Jousset, Sigurjón Jónsson, and Janneke de Laat.
-Thanks to KAUST, Delft University of Technology, and the GFZ – Potsdam to provide guidance and funding for this project.
+Thanks to KAUST, Delft University of Technology, and the GFZ – Potsdam for providing guidance and funding for this project.
 This project has received funding from the European Union's Horizon 2020 research and innovation program under the Marie Skłodowska-Curie grant agreement No 956965.
 ![image](https://user-images.githubusercontent.com/25305911/116566327-f3cb0a80-a906-11eb-9e3b-36e64d4212a5.png)
 
